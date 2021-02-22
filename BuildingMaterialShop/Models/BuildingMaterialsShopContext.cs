@@ -36,7 +36,7 @@ namespace BuildingMaterialShop.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Name=BuildingMaterialShopDB");
+                optionsBuilder.UseSqlServer("Name=ConnectionStrings:BuildingMaterialShopDB");
             }
         }
 
@@ -64,7 +64,7 @@ namespace BuildingMaterialShop.Models
             modelBuilder.Entity<CheckDetail>(entity =>
             {
                 entity.HasKey(e => new { e.CheckId, e.ProductId })
-                    .HasName("PK__CheckDet__4DC19B0A8807C46C");
+                    .HasName("PK__CheckDet__4DC19B0A1E880F84");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
@@ -87,7 +87,7 @@ namespace BuildingMaterialShop.Models
             {
                 entity.Property(e => e.Address).HasMaxLength(500);
 
-                entity.Property(e => e.BirdthDay).HasColumnType("date");
+                entity.Property(e => e.BirthDay).HasColumnType("date");
 
                 entity.Property(e => e.Email).HasMaxLength(50);
 
@@ -102,7 +102,7 @@ namespace BuildingMaterialShop.Models
             {
                 entity.Property(e => e.Address).HasMaxLength(500);
 
-                entity.Property(e => e.BirdthDay).HasColumnType("date");
+                entity.Property(e => e.BirthDay).HasColumnType("date");
 
                 entity.Property(e => e.Email).HasMaxLength(50);
 
@@ -140,7 +140,7 @@ namespace BuildingMaterialShop.Models
             modelBuilder.Entity<ImportDetail>(entity =>
             {
                 entity.HasKey(e => new { e.ImportId, e.ProductId })
-                    .HasName("PK__ImportDe__4DD7AB863603BB22");
+                    .HasName("PK__ImportDe__4DD7AB863E24FEF2");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
@@ -181,7 +181,7 @@ namespace BuildingMaterialShop.Models
             modelBuilder.Entity<OrderDetail>(entity =>
             {
                 entity.HasKey(e => new { e.OrderId, e.ProductId })
-                    .HasName("PK__OrderDet__08D097A3A6549081");
+                    .HasName("PK__OrderDet__08D097A307110B82");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
@@ -241,7 +241,7 @@ namespace BuildingMaterialShop.Models
             modelBuilder.Entity<Supply>(entity =>
             {
                 entity.HasKey(e => new { e.ProductId, e.SupplierId })
-                    .HasName("PK__Supplies__E0B2A0A6E2F81D4E");
+                    .HasName("PK__Supplies__E0B2A0A60D92C1A6");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
@@ -266,11 +266,9 @@ namespace BuildingMaterialShop.Models
 
                 entity.Property(e => e.Id).HasColumnName("id");
 
-                entity.Property(e => e.Date).HasColumnType("date");
+                entity.Property(e => e.Date).HasColumnType("datetime");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
-
-                entity.Property(e => e.ProductName).HasMaxLength(100);
 
                 entity.HasOne(d => d.Product)
                     .WithMany(p => p.WareHouses)

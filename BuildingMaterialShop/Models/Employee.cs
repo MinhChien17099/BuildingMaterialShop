@@ -21,7 +21,7 @@ namespace BuildingMaterialShop.Models
         public string PhoneNumber { get; set; }
         public string PassWord { get; set; }
         public bool? Gender { get; set; }
-        public DateTime? BirdthDay { get; set; }
+        public DateTime? BirthDay { get; set; }
         public string RoleId { get; set; }
 
         public virtual Role Role { get; set; }
