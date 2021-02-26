@@ -1,4 +1,5 @@
 using BuildingMaterialShop.Models;
+using BuildingMaterialShop.Modules.AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -41,6 +42,7 @@ namespace BuildingMaterialShop
 
             services.AddDbContext<BuildingMaterialsShopContext>(Options => Options.UseSqlServer(Configuration.GetConnectionString("BuildingMaterialShopDB")));
 
+            services.ConfigureAutoMapper();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
