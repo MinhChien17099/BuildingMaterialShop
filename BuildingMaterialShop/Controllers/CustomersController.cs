@@ -1,58 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using BuildingMaterialShop.ApiModels.CustomerViewModels;
+using BuildingMaterialShop.Auth;
+using BuildingMaterialShop.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using BuildingMaterialShop.Models;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace BuildingMaterialShop.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [Produces("application/json")]
     public class CustomersController : ControllerBase
     {
         private readonly BuildingMaterialsShopContext _context;
+        private readonly JWTSettings _jwtsettings;
 
-        public CustomersController(BuildingMaterialsShopContext context)
+        public CustomersController(IOptions<JWTSettings> jwtsetting, BuildingMaterialsShopContext context)
         {
             _context = context;
+            _jwtsettings = jwtsetting.Value;
         }
-
-        // GET: Customers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
         {
             return await _context.Customers.ToListAsync();
-
         }
 
-        // GET: Customers/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Customer>> GetCustomer(int id)
+        public async Task<ActionResult<Customer>> GetUser(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
+            var user = await _context.Customers.FindAsync(id);
 
-            if (customer == null)
+            if (user == null)
             {
                 return NotFound();
             }
 
-            return customer;
+            user.PassWord = null;
+
+            return user;
         }
 
-        // PUT: Customers/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCustomer(int id, Customer customer)
+        [Authorize]
+        [HttpPut("ChangePassword")]
+        public async Task<IActionResult> ChangePassword(int customerId, string password, string newPassword)
         {
-            if (id != customer.CustomerId)
+            if (!CustomerExists(customerId))
             {
                 return BadRequest();
             }
+            var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == customerId && c.PassWord == password);
+            if (customer == null)
+            {
+                return Ok("Mật khẩu cũ không hợp lệ.");
+            }
 
+            customer.PassWord = newPassword;
             _context.Entry(customer).State = EntityState.Modified;
 
             try
@@ -61,49 +73,174 @@ namespace BuildingMaterialShop.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!CustomerExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return Ok("Đổi mật khẩu thất bại.");
             }
 
-            return NoContent();
+            return Ok("Đổi mật khẩu thành công.");
+
         }
 
-        // POST: Customers
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
+        [HttpPost("Register")]
+        public async Task<ActionResult<CustomerViewModel>> Register([FromBody] Customer customer)
         {
+            if (customer.Email == null || customer.Email.Length < 10)
+            {
+                return Ok("Email không hợp lệ.");
+            }
+
+            if (EmailExists(customer.Email))
+            {
+                return Ok("Email đã tồn tại.");
+            }
+            if (customer.PassWord == null || customer.PassWord.Length < 10)
+            {
+                return Ok("Mật khẩu không hợp lệ.");
+            }
+
             _context.Customers.Add(customer);
+
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCustomer", new { id = customer.CustomerId }, customer);
+            customer.PassWord = null;
+
+            return CreatedAtAction("GetUser", new { id = customer.CustomerId }, customer);
+
         }
 
-        // DELETE: Customers/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCustomer(int id)
+        [HttpPost("Login")]
+        public async Task<ActionResult<CustomerViewModel>> Login([FromBody] Customer customer)
         {
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
+            customer = await _context.Customers
+                                .Where(u => u.Email == customer.Email
+                                && u.PassWord == customer.PassWord)
+                                .FirstOrDefaultAsync();
+
+            CustomerViewModel customerViewModel = null;
+
+            if (customer != null)
+            {
+                RefreshTokenCustomer refreshToken = GenerateRefreshToken();
+                customer.RefreshTokenCustomers.Add(refreshToken);
+                await _context.SaveChangesAsync();
+
+                customerViewModel = new CustomerViewModel(customer);
+                customerViewModel.RefreshToken = refreshToken.Token;
+            }
+
+
+            if (customerViewModel == null)
             {
                 return NotFound();
             }
 
-            _context.Customers.Remove(customer);
-            await _context.SaveChangesAsync();
+            //sign token here
+            customerViewModel.AccessToken = GenerateAccessToken(customer.CustomerId);
 
-            return NoContent();
+            return customerViewModel;
         }
 
+        [HttpPost("RefreshToken")]
+        public async Task<ActionResult<CustomerViewModel>> RefreshToken([FromBody] RefreshRequest refreshRequest)
+        {
+            Customer customer = GetUserFromAccessToken(refreshRequest.AccessToken);
+
+            if (customer != null && ValidateRefresh(customer, refreshRequest.RefreshToken))
+            {
+                CustomerViewModel customerViewModel = new CustomerViewModel(customer);
+                customerViewModel.AccessToken = GenerateAccessToken(customer.CustomerId);
+
+
+                return customerViewModel;
+            }
+
+            return null;
+        }
+        private bool ValidateRefresh(Customer customer, string refreshToken)
+        {
+
+            RefreshTokenCustomer refreshTokenCustomer = _context.RefreshTokenCustomers.Where(rt => rt.Token == refreshToken)
+                                        .OrderByDescending(rt => rt.ExpiryDate)
+                                        .FirstOrDefault();
+            if (refreshTokenCustomer != null && refreshTokenCustomer.CustomerId == customer.CustomerId
+                && refreshTokenCustomer.ExpiryDate > DateTime.UtcNow)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private Customer GetUserFromAccessToken(string accessToken)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_jwtsettings.SecretKey);
+
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ClockSkew = TimeSpan.Zero,
+                ValidateLifetime = false
+            };
+
+            SecurityToken securityToken;
+            var principle = tokenHandler.ValidateToken(accessToken, tokenValidationParameters, out securityToken);
+
+            JwtSecurityToken jwtSecurityToken = securityToken as JwtSecurityToken;
+
+            if (jwtSecurityToken != null && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                var customerId = principle.FindFirst(ClaimTypes.Name)?.Value;
+
+                return _context.Customers.Where(c => c.CustomerId == Convert.ToInt32(customerId)).FirstOrDefault();
+            }
+            return null;
+        }
+
+        private string GenerateAccessToken(int customerId)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_jwtsettings.SecretKey);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name,Convert.ToString(customerId))
+                }),
+                Expires = DateTime.UtcNow.AddSeconds(20),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        private RefreshTokenCustomer GenerateRefreshToken()
+        {
+            RefreshTokenCustomer refreshToken = new RefreshTokenCustomer();
+            var randomNumber = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                refreshToken.Token = Convert.ToBase64String(randomNumber);
+            }
+            refreshToken.ExpiryDate = DateTime.UtcNow.AddMinutes(1);
+
+            return refreshToken;
+
+        }
         private bool CustomerExists(int id)
         {
             return _context.Customers.Any(e => e.CustomerId == id);
         }
+
+        private bool EmailExists(string email)
+        {
+            return _context.Customers.Any(e => e.Email == email) && _context.Employees.Any(e => e.Email == email);
+        }
+
+
     }
 }

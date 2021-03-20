@@ -10,6 +10,7 @@ namespace BuildingMaterialShop.Models
         public Customer()
         {
             Orders = new HashSet<Order>();
+            RefreshTokenCustomers = new HashSet<RefreshTokenCustomer>();
         }
 
         public int CustomerId { get; set; }
@@ -22,5 +23,6 @@ namespace BuildingMaterialShop.Models
         public DateTime? BirthDay { get; set; }
 
         public virtual ICollection<Order> Orders { get; set; }
+        public virtual ICollection<RefreshTokenCustomer> RefreshTokenCustomers { get; set; }
     }
 }

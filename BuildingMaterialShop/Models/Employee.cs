@@ -11,7 +11,6 @@ namespace BuildingMaterialShop.Models
         {
             Checks = new HashSet<Check>();
             Imports = new HashSet<Import>();
-            Orders = new HashSet<Order>();
         }
 
         public int EmployeeId { get; set; }
@@ -27,6 +26,5 @@ namespace BuildingMaterialShop.Models
         public virtual Role Role { get; set; }
         public virtual ICollection<Check> Checks { get; set; }
         public virtual ICollection<Import> Imports { get; set; }
-        public virtual ICollection<Order> Orders { get; set; }
     }
 }

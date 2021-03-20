@@ -16,12 +16,10 @@ namespace BuildingMaterialShop.Models
         public DateTime? OrderDate { get; set; }
         public DateTime? ShipDate { get; set; }
         public decimal? Amount { get; set; }
-        public short? Status { get; set; }
         public int? CustomerId { get; set; }
-        public int? EmployeeId { get; set; }
+        public string Address { get; set; }
 
         public virtual Customer Customer { get; set; }
-        public virtual Employee Employee { get; set; }
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
     }
 }

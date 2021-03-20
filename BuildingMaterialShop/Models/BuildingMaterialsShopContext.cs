@@ -26,8 +26,11 @@ namespace BuildingMaterialShop.Models
         public virtual DbSet<ImportDetail> ImportDetails { get; set; }
         public virtual DbSet<Order> Orders { get; set; }
         public virtual DbSet<OrderDetail> OrderDetails { get; set; }
+        public virtual DbSet<OrderStatus> OrderStatus { get; set; }
         public virtual DbSet<Product> Products { get; set; }
+        public virtual DbSet<RefreshTokenCustomer> RefreshTokenCustomers { get; set; }
         public virtual DbSet<Role> Roles { get; set; }
+        public virtual DbSet<Status> Status { get; set; }
         public virtual DbSet<Supplier> Suppliers { get; set; }
         public virtual DbSet<Supply> Supplies { get; set; }
         public virtual DbSet<WareHouse> WareHouses { get; set; }
@@ -36,7 +39,7 @@ namespace BuildingMaterialShop.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Name=ConnectionStrings:BuildingMaterialShopDB");
+                optionsBuilder.UseSqlServer("Name=ExpressDB");
             }
         }
 
@@ -64,7 +67,7 @@ namespace BuildingMaterialShop.Models
             modelBuilder.Entity<CheckDetail>(entity =>
             {
                 entity.HasKey(e => new { e.CheckId, e.ProductId })
-                    .HasName("PK__CheckDet__4DC19B0A1E880F84");
+                    .HasName("PK__CheckDet__4DC19B0AA6EABCF5");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
@@ -140,7 +143,7 @@ namespace BuildingMaterialShop.Models
             modelBuilder.Entity<ImportDetail>(entity =>
             {
                 entity.HasKey(e => new { e.ImportId, e.ProductId })
-                    .HasName("PK__ImportDe__4DD7AB863E24FEF2");
+                    .HasName("PK__ImportDe__4DD7AB860F013DBD");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
@@ -161,6 +164,8 @@ namespace BuildingMaterialShop.Models
 
             modelBuilder.Entity<Order>(entity =>
             {
+                entity.Property(e => e.Address).HasMaxLength(1000);
+
                 entity.Property(e => e.Amount).HasColumnType("money");
 
                 entity.Property(e => e.OrderDate).HasColumnType("datetime");
@@ -171,17 +176,12 @@ namespace BuildingMaterialShop.Models
                     .WithMany(p => p.Orders)
                     .HasForeignKey(d => d.CustomerId)
                     .HasConstraintName("FK_OrdersCustomer");
-
-                entity.HasOne(d => d.Employee)
-                    .WithMany(p => p.Orders)
-                    .HasForeignKey(d => d.EmployeeId)
-                    .HasConstraintName("FK_OrdersEmployee");
             });
 
             modelBuilder.Entity<OrderDetail>(entity =>
             {
                 entity.HasKey(e => new { e.OrderId, e.ProductId })
-                    .HasName("PK__OrderDet__08D097A307110B82");
+                    .HasName("PK__OrderDet__08D097A31BB60483");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
@@ -196,6 +196,30 @@ namespace BuildingMaterialShop.Models
                     .HasForeignKey(d => d.ProductId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_OrderDetailsProduct");
+            });
+
+            modelBuilder.Entity<OrderStatus>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.Property(e => e.Date)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.HasOne(d => d.Employee)
+                    .WithMany()
+                    .HasForeignKey(d => d.EmployeeId)
+                    .HasConstraintName("FK_OrderEmployee");
+
+                entity.HasOne(d => d.Order)
+                    .WithMany()
+                    .HasForeignKey(d => d.OrderId)
+                    .HasConstraintName("FK_OrderStatusOrder");
+
+                entity.HasOne(d => d.Status)
+                    .WithMany()
+                    .HasForeignKey(d => d.StatusId)
+                    .HasConstraintName("FK_OrderStatus");
             });
 
             modelBuilder.Entity<Product>(entity =>
@@ -218,11 +242,42 @@ namespace BuildingMaterialShop.Models
                     .HasConstraintName("FK_ProductsCategory");
             });
 
+            modelBuilder.Entity<RefreshTokenCustomer>(entity =>
+            {
+                entity.HasKey(e => e.TokenId);
+
+                entity.ToTable("RefreshTokenCustomer");
+
+                entity.Property(e => e.TokenId).HasColumnName("tokenId");
+
+                entity.Property(e => e.CustomerId).HasColumnName("customerId");
+
+                entity.Property(e => e.ExpiryDate)
+                    .HasColumnType("datetime")
+                    .HasColumnName("expiryDate");
+
+                entity.Property(e => e.Token)
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .IsUnicode(false)
+                    .HasColumnName("token");
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany(p => p.RefreshTokenCustomers)
+                    .HasForeignKey(d => d.CustomerId)
+                    .HasConstraintName("FK__RefreshTo__custo__5CD6CB2B");
+            });
+
             modelBuilder.Entity<Role>(entity =>
             {
                 entity.Property(e => e.RoleId).HasMaxLength(20);
 
                 entity.Property(e => e.RoleName).HasMaxLength(100);
+            });
+
+            modelBuilder.Entity<Status>(entity =>
+            {
+                entity.Property(e => e.StatusName).HasMaxLength(200);
             });
 
             modelBuilder.Entity<Supplier>(entity =>
@@ -241,7 +296,7 @@ namespace BuildingMaterialShop.Models
             modelBuilder.Entity<Supply>(entity =>
             {
                 entity.HasKey(e => new { e.ProductId, e.SupplierId })
-                    .HasName("PK__Supplies__E0B2A0A60D92C1A6");
+                    .HasName("PK__Supplies__E0B2A0A67888F9B3");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
