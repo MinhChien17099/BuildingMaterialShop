@@ -17,7 +17,7 @@ namespace BuildingMaterialShop.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : ControllerBase
+     class AuthController : ControllerBase
     {
         private readonly IConfiguration _config;
         private readonly BuildingMaterialsShopContext _context;

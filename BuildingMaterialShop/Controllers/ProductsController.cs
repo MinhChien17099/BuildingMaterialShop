@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BuildingMaterialShop.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BuildingMaterialShop.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductsController : ControllerBase
     {
         private readonly BuildingMaterialsShopContext _context;

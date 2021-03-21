@@ -39,7 +39,7 @@ namespace BuildingMaterialShop.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Name=ExpressDB");
+                optionsBuilder.UseSqlServer("Name=BuildingMaterialShopDB");
             }
         }
 

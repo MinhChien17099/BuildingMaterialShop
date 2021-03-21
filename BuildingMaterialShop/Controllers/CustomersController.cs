@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 namespace BuildingMaterialShop.Controllers
 {
     [Route("[controller]")]
+    [Authorize]
     [ApiController]
     public class CustomersController : ControllerBase
     {
@@ -29,6 +30,8 @@ namespace BuildingMaterialShop.Controllers
             _context = context;
             _jwtsettings = jwtsetting.Value;
         }
+
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
         {
@@ -50,7 +53,6 @@ namespace BuildingMaterialShop.Controllers
             return user;
         }
 
-        [Authorize]
         [HttpPut("ChangePassword")]
         public async Task<IActionResult> ChangePassword(int customerId, string password, string newPassword)
         {
@@ -64,7 +66,7 @@ namespace BuildingMaterialShop.Controllers
                 return Ok("Mật khẩu cũ không hợp lệ.");
             }
 
-            customer.PassWord = newPassword;
+            customer.PassWord = Auth.MD5.CreateMD5(newPassword);
             _context.Entry(customer).State = EntityState.Modified;
 
             try
@@ -80,22 +82,25 @@ namespace BuildingMaterialShop.Controllers
 
         }
 
+        [AllowAnonymous]
         [HttpPost("Register")]
-        public async Task<ActionResult<CustomerViewModel>> Register([FromBody] Customer customer)
+        public async Task<ActionResult<CustomerViewModel>> Register([FromBody] CustomerRegisterViewModel customerRegister)
         {
-            if (customer.Email == null || customer.Email.Length < 10)
+            if (customerRegister.Email == null || customerRegister.Email.Length < 10)
             {
                 return Ok("Email không hợp lệ.");
             }
 
-            if (EmailExists(customer.Email))
+            if (EmailCustomerExists(customerRegister.Email) || EmailEmployeeExists(customerRegister.Email))
             {
                 return Ok("Email đã tồn tại.");
             }
-            if (customer.PassWord == null || customer.PassWord.Length < 10)
+            if (customerRegister.PassWord == null || customerRegister.PassWord.Length < 10)
             {
                 return Ok("Mật khẩu không hợp lệ.");
             }
+
+            var customer = customerRegister.ToCustomer();
 
             _context.Customers.Add(customer);
 
@@ -106,13 +111,13 @@ namespace BuildingMaterialShop.Controllers
             return CreatedAtAction("GetUser", new { id = customer.CustomerId }, customer);
 
         }
-
+        [AllowAnonymous]
         [HttpPost("Login")]
-        public async Task<ActionResult<CustomerViewModel>> Login([FromBody] Customer customer)
+        public async Task<ActionResult<CustomerViewModel>> Login([FromBody] CustomerLoginViewModel customerLoginViewModel)
         {
-            customer = await _context.Customers
-                                .Where(u => u.Email == customer.Email
-                                && u.PassWord == customer.PassWord)
+            var customer = await _context.Customers
+                                .Where(u => u.Email == customerLoginViewModel.Email
+                                && u.PassWord == customerLoginViewModel.PassWord)
                                 .FirstOrDefaultAsync();
 
             CustomerViewModel customerViewModel = null;
@@ -138,7 +143,7 @@ namespace BuildingMaterialShop.Controllers
 
             return customerViewModel;
         }
-
+        [AllowAnonymous]
         [HttpPost("RefreshToken")]
         public async Task<ActionResult<CustomerViewModel>> RefreshToken([FromBody] RefreshRequest refreshRequest)
         {
@@ -208,7 +213,7 @@ namespace BuildingMaterialShop.Controllers
                 {
                     new Claim(ClaimTypes.Name,Convert.ToString(customerId))
                 }),
-                Expires = DateTime.UtcNow.AddSeconds(20),
+                Expires = DateTime.UtcNow.AddHours(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
                 SecurityAlgorithms.HmacSha256Signature)
             };
@@ -226,7 +231,7 @@ namespace BuildingMaterialShop.Controllers
                 rng.GetBytes(randomNumber);
                 refreshToken.Token = Convert.ToBase64String(randomNumber);
             }
-            refreshToken.ExpiryDate = DateTime.UtcNow.AddMinutes(1);
+            refreshToken.ExpiryDate = DateTime.UtcNow.AddDays(1);
 
             return refreshToken;
 
@@ -236,9 +241,13 @@ namespace BuildingMaterialShop.Controllers
             return _context.Customers.Any(e => e.CustomerId == id);
         }
 
-        private bool EmailExists(string email)
+        private bool EmailCustomerExists(string email)
         {
-            return _context.Customers.Any(e => e.Email == email) && _context.Employees.Any(e => e.Email == email);
+            return _context.Customers.Any(e => e.Email == email);
+        }
+        private bool EmailEmployeeExists(string email)
+        {
+            return _context.Employees.Any(e => e.Email == email);
         }
 
 
