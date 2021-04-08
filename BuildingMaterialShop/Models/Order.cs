@@ -10,16 +10,17 @@ namespace BuildingMaterialShop.Models
         public Order()
         {
             OrderDetails = new HashSet<OrderDetail>();
+            OrderStatus = new HashSet<OrderStatus>();
         }
 
         public int OrderId { get; set; }
         public DateTime? OrderDate { get; set; }
-        public DateTime? ShipDate { get; set; }
         public decimal? Amount { get; set; }
         public int? CustomerId { get; set; }
         public string Address { get; set; }
 
         public virtual Customer Customer { get; set; }
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
+        public virtual ICollection<OrderStatus> OrderStatus { get; set; }
     }
 }

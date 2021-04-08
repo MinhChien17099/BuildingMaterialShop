@@ -21,7 +21,7 @@ namespace BuildingMaterialShop.Models
         public decimal? Price { get; set; }
         public string Unit { get; set; }
         public string Images { get; set; }
-        public string Desciptions { get; set; }
+        public string Descriptions { get; set; }
         public bool? Status { get; set; }
         public string CategoryId { get; set; }
 

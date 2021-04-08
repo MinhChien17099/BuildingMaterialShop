@@ -11,7 +11,7 @@ namespace BuildingMaterialShop.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class EmployeesController : ControllerBase
+    class EmployeesController : ControllerBase
     {
         private readonly BuildingMaterialsShopContext _context;
 

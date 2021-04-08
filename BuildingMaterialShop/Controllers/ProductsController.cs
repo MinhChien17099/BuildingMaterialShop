@@ -7,12 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BuildingMaterialShop.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 
 namespace BuildingMaterialShop.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize]
+    [EnableCors("AllowOrigin")]
+
     public class ProductsController : ControllerBase
     {
         private readonly BuildingMaterialsShopContext _context;

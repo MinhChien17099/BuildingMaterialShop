@@ -1,0 +1,15 @@
+﻿
+Scaffold-DbContext "Name=ConnectionStrings:BuildingMaterialShopDB" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
+
+
+Tạo đơn hàng
+	Thêm chi tiết đơn hàng 
+		Cập nhật tổng tiền cho đơn hàng
+	Thêm trạng thái cho đơn hàng
+
+
+Đơn hàng:
+	-Nhân viên cập nhật tình trạng đơn hàng
+
+	-Khách hàng xem lại lịch sử đơn hàng
+	-Khách hàng đặt hàng

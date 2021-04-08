@@ -2,6 +2,7 @@
 using BuildingMaterialShop.Auth;
 using BuildingMaterialShop.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -20,6 +21,8 @@ namespace BuildingMaterialShop.Controllers
     [Route("[controller]")]
     [Authorize]
     [ApiController]
+    [EnableCors("AllowOrigin")]
+
     public class CustomersController : ControllerBase
     {
         private readonly BuildingMaterialsShopContext _context;
@@ -135,7 +138,7 @@ namespace BuildingMaterialShop.Controllers
 
             if (customerViewModel == null)
             {
-                return NotFound();
+                return Ok("Email hoặc mật khẩu không chính xác.");
             }
 
             //sign token here
@@ -160,6 +163,7 @@ namespace BuildingMaterialShop.Controllers
 
             return null;
         }
+
         private bool ValidateRefresh(Customer customer, string refreshToken)
         {
 

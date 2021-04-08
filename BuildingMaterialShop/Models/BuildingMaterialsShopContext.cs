@@ -29,6 +29,7 @@ namespace BuildingMaterialShop.Models
         public virtual DbSet<OrderStatus> OrderStatus { get; set; }
         public virtual DbSet<Product> Products { get; set; }
         public virtual DbSet<RefreshTokenCustomer> RefreshTokenCustomers { get; set; }
+        public virtual DbSet<RefreshTokenEmployee> RefreshTokenEmployees { get; set; }
         public virtual DbSet<Role> Roles { get; set; }
         public virtual DbSet<Status> Status { get; set; }
         public virtual DbSet<Supplier> Suppliers { get; set; }
@@ -39,7 +40,7 @@ namespace BuildingMaterialShop.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Name=BuildingMaterialShopDB");
+                optionsBuilder.UseSqlServer("Name=ConnectionStrings:BuildingMaterialShopDB");
             }
         }
 
@@ -67,7 +68,7 @@ namespace BuildingMaterialShop.Models
             modelBuilder.Entity<CheckDetail>(entity =>
             {
                 entity.HasKey(e => new { e.CheckId, e.ProductId })
-                    .HasName("PK__CheckDet__4DC19B0AA6EABCF5");
+                    .HasName("PK__CheckDet__4DC19B0A97E21D68");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
@@ -143,7 +144,7 @@ namespace BuildingMaterialShop.Models
             modelBuilder.Entity<ImportDetail>(entity =>
             {
                 entity.HasKey(e => new { e.ImportId, e.ProductId })
-                    .HasName("PK__ImportDe__4DD7AB860F013DBD");
+                    .HasName("PK__ImportDe__4DD7AB860B18EF52");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
@@ -170,8 +171,6 @@ namespace BuildingMaterialShop.Models
 
                 entity.Property(e => e.OrderDate).HasColumnType("datetime");
 
-                entity.Property(e => e.ShipDate).HasColumnType("datetime");
-
                 entity.HasOne(d => d.Customer)
                     .WithMany(p => p.Orders)
                     .HasForeignKey(d => d.CustomerId)
@@ -181,7 +180,7 @@ namespace BuildingMaterialShop.Models
             modelBuilder.Entity<OrderDetail>(entity =>
             {
                 entity.HasKey(e => new { e.OrderId, e.ProductId })
-                    .HasName("PK__OrderDet__08D097A31BB60483");
+                    .HasName("PK__OrderDet__08D097A3DC84C355");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
@@ -200,26 +199,30 @@ namespace BuildingMaterialShop.Models
 
             modelBuilder.Entity<OrderStatus>(entity =>
             {
-                entity.HasNoKey();
+                entity.HasKey(e => new { e.StatusId, e.OrderId, e.EmployeeId })
+                    .HasName("PK__OrderSta__34ADF590CAB6C527");
 
                 entity.Property(e => e.Date)
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("(getdate())");
 
                 entity.HasOne(d => d.Employee)
-                    .WithMany()
+                    .WithMany(p => p.OrderStatus)
                     .HasForeignKey(d => d.EmployeeId)
-                    .HasConstraintName("FK_OrderEmployee");
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__OrderStat__Emplo__48CFD27E");
 
                 entity.HasOne(d => d.Order)
-                    .WithMany()
+                    .WithMany(p => p.OrderStatus)
                     .HasForeignKey(d => d.OrderId)
-                    .HasConstraintName("FK_OrderStatusOrder");
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__OrderStat__Order__47DBAE45");
 
                 entity.HasOne(d => d.Status)
-                    .WithMany()
+                    .WithMany(p => p.OrderStatus)
                     .HasForeignKey(d => d.StatusId)
-                    .HasConstraintName("FK_OrderStatus");
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__OrderStat__Statu__46E78A0C");
             });
 
             modelBuilder.Entity<Product>(entity =>
@@ -265,7 +268,34 @@ namespace BuildingMaterialShop.Models
                 entity.HasOne(d => d.Customer)
                     .WithMany(p => p.RefreshTokenCustomers)
                     .HasForeignKey(d => d.CustomerId)
-                    .HasConstraintName("FK__RefreshTo__custo__5CD6CB2B");
+                    .HasConstraintName("FK__RefreshTo__custo__3F466844");
+            });
+
+            modelBuilder.Entity<RefreshTokenEmployee>(entity =>
+            {
+                entity.HasKey(e => e.TokenId)
+                    .HasName("PK__RefreshT__AC16DB47559C5F0A");
+
+                entity.ToTable("RefreshTokenEmployee");
+
+                entity.Property(e => e.TokenId).HasColumnName("tokenId");
+
+                entity.Property(e => e.EmployeeId).HasColumnName("employeeId");
+
+                entity.Property(e => e.ExpiryDate)
+                    .HasColumnType("datetime")
+                    .HasColumnName("expiryDate");
+
+                entity.Property(e => e.Token)
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .IsUnicode(false)
+                    .HasColumnName("token");
+
+                entity.HasOne(d => d.Employee)
+                    .WithMany(p => p.RefreshTokenEmployees)
+                    .HasForeignKey(d => d.EmployeeId)
+                    .HasConstraintName("FK__RefreshTo__emplo__403A8C7D");
             });
 
             modelBuilder.Entity<Role>(entity =>
@@ -296,7 +326,7 @@ namespace BuildingMaterialShop.Models
             modelBuilder.Entity<Supply>(entity =>
             {
                 entity.HasKey(e => new { e.ProductId, e.SupplierId })
-                    .HasName("PK__Supplies__E0B2A0A67888F9B3");
+                    .HasName("PK__Supplies__E0B2A0A6C5BA613D");
 
                 entity.Property(e => e.ProductId).HasMaxLength(20);
 
