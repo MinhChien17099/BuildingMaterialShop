@@ -53,7 +53,10 @@ namespace BuildingMaterialShop.Controllers
             //    .Collection(pro => pro.WareHouses)
             //    .Load();
 
-
+            if(products==null || products.Count==0)
+            {
+                return Ok("Không tìm thấy sản phẩm phù hợp.");
+            }
 
             return products;
         }

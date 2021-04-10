@@ -31,10 +31,11 @@ namespace BuildingMaterialShop.Controllers
         }
 
         // GET: Categories/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Category>> GetCategory(string id)
+        [HttpGet("{categoryId}")]
+        public async Task<ActionResult<Category>> GetCategory(string categoryId)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _context.Categories.Include(cate => cate.Products).Where(cate => cate.CategoryId == categoryId).FirstOrDefaultAsync();
+
 
             if (category == null)
             {

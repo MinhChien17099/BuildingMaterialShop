@@ -20,9 +20,24 @@ namespace BuildingMaterialShop.Controllers
         {
             _context = context;
         }
-
         // GET: Orders/customerId
-        [HttpGet("{customerId}")]
+        [HttpGet("{orderId}")]
+        public async Task<ActionResult<Order>> GetOrderDetails(int orderId)
+        {
+            var order = await _context.Orders.Where(order => order.OrderId == orderId)
+                                            .Include(order => order.OrderDetails)
+                                                .ThenInclude(detail => detail.Product)
+                                            .Include(order => order.OrderStatus)
+                                            .FirstOrDefaultAsync();
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            return order;
+        }
+        // GET: Orders/customerId
+        [HttpGet("GetOrdersByCustomerId/{customerId}")]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrdersByCustomerId(int customerId)
         {
             return await _context.Orders.Where(order => order.CustomerId == customerId)
@@ -76,12 +91,13 @@ namespace BuildingMaterialShop.Controllers
         // POST: api/Orders
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Order>> PostOrder(Order order)
+        public async Task<ActionResult<Order>> PostOrder( [FromBody] Order order)
         {
             _context.Orders.Add(order);
+
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetOrder", new { id = order.OrderId }, order);
+            return CreatedAtAction("GetOrderDetails", new { orderId = order.OrderId }, order);
         }
 
         // DELETE: api/Orders/5

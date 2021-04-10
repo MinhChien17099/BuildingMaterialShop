@@ -41,10 +41,11 @@ namespace BuildingMaterialShop.Controllers
             return await _context.Customers.ToListAsync();
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Customer>> GetUser(int id)
+        [AllowAnonymous]
+        [HttpGet("{customerId}")]
+        public async Task<ActionResult<Customer>> GetCustomerInfo(int customerId)
         {
-            var user = await _context.Customers.FindAsync(id);
+            var user = await _context.Customers.FindAsync(customerId);
 
             if (user == null)
             {

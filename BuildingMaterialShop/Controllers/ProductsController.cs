@@ -32,27 +32,15 @@ namespace BuildingMaterialShop.Controllers
                                                 .ToListAsync();
         }
 
+       
         // GET: Products/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(string id)
-        {
-            var product = await _context.Products.FindAsync(id);
-
-            if (product == null)
-            {
-                return NotFound();
-            }
-
-            return product;
-        }
-        // GET: Products/5
-        [HttpGet("GetProductDetails/{id}")]
-        public async Task<ActionResult<Product>> GetProductDetails(string id)
+        [HttpGet("{productId}")]
+        public async Task<ActionResult<Product>> GetProductDetails(string productId)
         {
             var product = await _context.Products.Include(pro => pro.WareHouses)
                                                 .Include(pro => pro.Category)
                                                 .Include(pro => pro.Supplies).ThenInclude(pro=>pro.Supplier)
-                                                .Where(pro => pro.ProductId == id).FirstOrDefaultAsync();
+                                                .Where(pro => pro.ProductId == productId).FirstOrDefaultAsync();
 
             if (product == null)
             {
