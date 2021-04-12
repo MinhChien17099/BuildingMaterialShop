@@ -1,5 +1,6 @@
 ﻿using BuildingMaterialShop.ApiModels.CustomerViewModels;
 using BuildingMaterialShop.Models;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -17,7 +18,9 @@ namespace BuildingMaterialShop.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-     class AuthController : ControllerBase
+    [EnableCors("AllowOrigin")]
+
+    class AuthController : ControllerBase
     {
         private readonly IConfiguration _config;
         private readonly BuildingMaterialsShopContext _context;

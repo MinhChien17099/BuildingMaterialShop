@@ -28,18 +28,20 @@ namespace BuildingMaterialShop.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
-            return await _context.Products.Include(pro => pro.WareHouses).Include(pro => pro.Category)
-                                                .ToListAsync();
+            return await _context.Products.Include(pro => pro.WareHouses)
+                                            .Include(pro => pro.Category)
+                                            .ToListAsync();
+
         }
 
-       
+
         // GET: Products/5
         [HttpGet("{productId}")]
         public async Task<ActionResult<Product>> GetProductDetails(string productId)
         {
             var product = await _context.Products.Include(pro => pro.WareHouses)
                                                 .Include(pro => pro.Category)
-                                                .Include(pro => pro.Supplies).ThenInclude(pro=>pro.Supplier)
+                                                .Include(pro => pro.Supplies).ThenInclude(pro => pro.Supplier)
                                                 .Where(pro => pro.ProductId == productId).FirstOrDefaultAsync();
 
             if (product == null)

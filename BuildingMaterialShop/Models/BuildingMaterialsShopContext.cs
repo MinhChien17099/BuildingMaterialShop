@@ -199,30 +199,24 @@ namespace BuildingMaterialShop.Models
 
             modelBuilder.Entity<OrderStatus>(entity =>
             {
-                entity.HasKey(e => new { e.StatusId, e.OrderId, e.EmployeeId })
-                    .HasName("PK__OrderSta__34ADF590CAB6C527");
+                entity.HasKey(e => new { e.StatusId, e.OrderId })
+                    .HasName("PK__OrderSta__24D725DF2F6B3947");
 
                 entity.Property(e => e.Date)
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("(getdate())");
 
-                entity.HasOne(d => d.Employee)
-                    .WithMany(p => p.OrderStatus)
-                    .HasForeignKey(d => d.EmployeeId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__OrderStat__Emplo__48CFD27E");
-
                 entity.HasOne(d => d.Order)
                     .WithMany(p => p.OrderStatus)
                     .HasForeignKey(d => d.OrderId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__OrderStat__Order__47DBAE45");
+                    .HasConstraintName("FK_OrderStatus_OrderId");
 
                 entity.HasOne(d => d.Status)
                     .WithMany(p => p.OrderStatus)
                     .HasForeignKey(d => d.StatusId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__OrderStat__Statu__46E78A0C");
+                    .HasConstraintName("FK_OrderStatus_Status");
             });
 
             modelBuilder.Entity<Product>(entity =>

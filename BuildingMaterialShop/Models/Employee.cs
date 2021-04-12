@@ -11,7 +11,6 @@ namespace BuildingMaterialShop.Models
         {
             Checks = new HashSet<Check>();
             Imports = new HashSet<Import>();
-            OrderStatus = new HashSet<OrderStatus>();
             RefreshTokenEmployees = new HashSet<RefreshTokenEmployee>();
         }
 
@@ -28,7 +27,6 @@ namespace BuildingMaterialShop.Models
         public virtual Role Role { get; set; }
         public virtual ICollection<Check> Checks { get; set; }
         public virtual ICollection<Import> Imports { get; set; }
-        public virtual ICollection<OrderStatus> OrderStatus { get; set; }
         public virtual ICollection<RefreshTokenEmployee> RefreshTokenEmployees { get; set; }
     }
 }

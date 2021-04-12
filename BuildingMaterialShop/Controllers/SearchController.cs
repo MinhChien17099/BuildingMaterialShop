@@ -29,10 +29,7 @@ namespace BuildingMaterialShop.Controllers
         public async Task<ActionResult<IEnumerable<Product>>> Search(string keyword)
         {
             //Eager loading
-            var products = await _context.Products.Where(pro =>
-                                                (pro.ProductName + pro.Descriptions + pro.ProductId + pro.Category.CategoryName)
-                                                .ToUpper()
-                                                .Contains(keyword.ToUpper()))
+            var products = await _context.Products.Where(pro =>(pro.ProductName + pro.Descriptions + pro.ProductId + pro.Category.CategoryName).ToUpper().Contains(keyword.ToUpper()))
                                                 .ToListAsync();
 
             ////Explicit loading

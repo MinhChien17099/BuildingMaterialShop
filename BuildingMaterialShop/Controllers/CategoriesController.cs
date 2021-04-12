@@ -34,7 +34,10 @@ namespace BuildingMaterialShop.Controllers
         [HttpGet("{categoryId}")]
         public async Task<ActionResult<Category>> GetCategory(string categoryId)
         {
-            var category = await _context.Categories.Include(cate => cate.Products).Where(cate => cate.CategoryId == categoryId).FirstOrDefaultAsync();
+            var category = await _context.Categories.Include(cate => cate.Products)
+                                                        .ThenInclude(pro => pro.WareHouses)
+                                                    .Where(cate => cate.CategoryId == categoryId)
+                                                    .FirstOrDefaultAsync();
 
 
             if (category == null)
