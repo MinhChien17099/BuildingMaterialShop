@@ -14,7 +14,7 @@ namespace BuildingMaterialShop.Controllers
     [Route("[controller]")]
     [ApiController]
     [EnableCors("AllowOrigin")]
-
+    [AllowAnonymous]
     public class OrdersController : ControllerBase
     {
         private readonly BuildingMaterialsShopContext _context;
@@ -57,10 +57,7 @@ namespace BuildingMaterialShop.Controllers
                                                 .ThenInclude(orderStatus => orderStatus.Status)
                                             .ToListAsync();
 
-
         }
-
-
 
         // PUT: api/Orders/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -114,23 +111,7 @@ namespace BuildingMaterialShop.Controllers
             return CreatedAtAction("GetOrderDetails", new { orderId = order.OrderId }, order);
         }
 
-
-
-        // DELETE: api/Orders/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteOrder(int id)
-        {
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null)
-            {
-                return NotFound();
-            }
-
-            _context.Orders.Remove(order);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
+        
 
         private bool OrderExists(int id)
         {
@@ -156,5 +137,7 @@ namespace BuildingMaterialShop.Controllers
         {
             return _context.WareHouses.Where(w => w.ProductId == productId).ToList().Last().Quantity;
         }
+
+       
     }
 }
