@@ -10,11 +10,13 @@ namespace BuildingMaterialShop.Models
     {
         public BuildingMaterialsShopContext()
         {
+
         }
 
         public BuildingMaterialsShopContext(DbContextOptions<BuildingMaterialsShopContext> options)
             : base(options)
         {
+
         }
 
         public virtual DbSet<Category> Categories { get; set; }

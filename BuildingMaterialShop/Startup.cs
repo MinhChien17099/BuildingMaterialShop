@@ -39,7 +39,7 @@ namespace BuildingMaterialShop
             });
 
             services.AddMvc(option => option.EnableEndpointRouting = false)
-                .SetCompatibilityVersion(CompatibilityVersion.Latest)
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
                 .AddNewtonsoftJson(opt => opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore);
 
             services.AddDbContext<BuildingMaterialsShopContext>(Options => Options.UseSqlServer(Configuration.GetConnectionString("BuildingMaterialShopDB")));

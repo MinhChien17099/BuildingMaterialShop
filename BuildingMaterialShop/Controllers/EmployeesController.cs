@@ -38,23 +38,30 @@ namespace BuildingMaterialShop.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Employee>>> GetEmployees()
         {
-            return await _context.Employees.ToListAsync();
+
+            var employees = await _context.Employees.Where(e => e.RoleId != "ADMIN").Include(employee => employee.Role).ToListAsync();
+            return employees;
         }
 
         [AllowAnonymous]
         [HttpGet("{employeeId}")]
         public async Task<ActionResult<Employee>> GetEmployeeInfo(int employeeId)
         {
-            var user = await _context.Employees.FindAsync(employeeId);
+            var employee = await _context.Employees.SingleAsync(employee => employee.EmployeeId == employeeId);
 
-            if (user == null)
+            _context.Entry(employee)
+                .Reference(emp => emp.Role)
+                .Load();
+
+
+            if (employee == null)
             {
                 return NotFound();
             }
 
-            user.PassWord = null;
+            employee.PassWord = null;
 
-            return user;
+            return employee;
         }
 
         [HttpPut("ChangePassword")]
@@ -119,7 +126,7 @@ namespace BuildingMaterialShop.Controllers
         [HttpPost("Login")]
         public async Task<ActionResult<EmployeeViewModel>> Login([FromBody] EmployeeLoginViewModel employeeLoginViewModel)
         {
-            if (employeeLoginViewModel.Email == null || employeeLoginViewModel.PassWord==null)
+            if (employeeLoginViewModel.Email == null || employeeLoginViewModel.PassWord == null)
             {
                 return Ok("Email hoặc mật khẩu không chính xác.");
             }
