@@ -1,6 +1,7 @@
 ﻿
 Scaffold-DbContext "Name=ConnectionStrings:BuildingMaterialShopDB" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
 
+not found image 1paIUZyOqIW5ZllHXE0b6r-kZWJHQMQYR
 
 Tạo đơn hàng
 	Thêm chi tiết đơn hàng 

@@ -51,6 +51,50 @@ namespace BuildingMaterialShop.Controllers
 
             return product;
         }
+
+        // POST: Products
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<Product>> PostProduct(Product product)
+        {
+            if (String.IsNullOrEmpty(product.ProductId))
+            {
+                return Ok("Mã sản phẩm không được để trống.");
+            }
+
+            if (!CategoryExists(product.CategoryId))
+            {
+                return NotFound();
+            }
+
+            WareHouse ware = new WareHouse();
+            ware.Date = DateTime.Now;
+            ware.ProductId = product.ProductId;
+            ware.Quantity = 0;
+
+            product.WareHouses.Add(ware);
+
+            _context.Products.Add(product);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                if (ProductExists(product.ProductId))
+                {
+                    return Conflict();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return CreatedAtAction("GetProductDetails", new { id = product.ProductId }, product);
+        }
+
         // PUT: Products/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
@@ -82,31 +126,6 @@ namespace BuildingMaterialShop.Controllers
             return NoContent();
         }
 
-        // POST: Products
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Product>> PostProduct(Product product)
-        {
-            _context.Products.Add(product);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (ProductExists(product.ProductId))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return CreatedAtAction("GetProduct", new { id = product.ProductId }, product);
-        }
-
         // DELETE: Products/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(string id)
@@ -126,6 +145,10 @@ namespace BuildingMaterialShop.Controllers
         private bool ProductExists(string id)
         {
             return _context.Products.Any(e => e.ProductId == id);
+        }
+        private bool CategoryExists(string categoryId)
+        {
+            return _context.Categories.Any(e => e.CategoryId == categoryId);
         }
     }
 }

@@ -16,6 +16,8 @@ namespace BuildingMaterialShop.ApiModels.EmployeeViewModel
         public string PassWord { get; set; }
         public bool? Gender { get; set; }
         public DateTime? BirthDay { get; set; }
+        public string RoleId { get; set; }
+
         public Employee ToEmployee()
         {
             Employee employee = new Employee();
@@ -26,6 +28,7 @@ namespace BuildingMaterialShop.ApiModels.EmployeeViewModel
             employee.Gender = this.Gender;
             employee.PhoneNumber = this.PhoneNumber;
             employee.PassWord = MD5.CreateMD5(this.PassWord);
+            employee.RoleId = this.RoleId;
             return employee;
         }
     }

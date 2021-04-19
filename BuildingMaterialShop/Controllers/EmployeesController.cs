@@ -63,21 +63,38 @@ namespace BuildingMaterialShop.Controllers
 
             return employee;
         }
-
-        [HttpPut("ChangePassword")]
-        public async Task<IActionResult> ChangePassword(int employeeId, string password, string newPassword)
+        [AllowAnonymous]
+        [HttpPost("ChangePassword")]
+        public async Task<IActionResult> ChangePassword(EmployeeChangePasswordViewModel model)
         {
-            if (!EmployeeExists(employeeId))
+            if (!EmployeeExists(model.EmployeeId))
             {
                 return BadRequest();
             }
-            var employee = _context.Employees.FirstOrDefault(c => c.EmployeeId == employeeId && c.PassWord == password);
+            var employee = _context.Employees.FirstOrDefault(e => e.EmployeeId == model.EmployeeId && e.PassWord == Auth.MD5.CreateMD5(model.OldPassword));
+
             if (employee == null)
             {
                 return Ok("Mật khẩu cũ không hợp lệ.");
             }
 
-            employee.PassWord = Auth.MD5.CreateMD5(newPassword);
+            if (string.IsNullOrEmpty(model.NewPassword) || model.NewPassword.Contains(' ') || model.NewPassword.Length < 6)
+            {
+                return Ok("Mật khẩu mới không hợp lệ.");
+            }
+
+            if (!model.NewPassword.Equals(model.ConfirmPassword))
+            {
+                return Ok("Mật khẩu mới không trùng khớp.");
+            }
+            if (!model.NewPassword.Equals(model.OldPassword))
+            {
+                return Ok("Mật khẩu mới không được giống với mật khẩu cũ.");
+            }
+
+
+            employee.PassWord = Auth.MD5.CreateMD5(model.NewPassword);
+
             _context.Entry(employee).State = EntityState.Modified;
 
             try
@@ -106,20 +123,20 @@ namespace BuildingMaterialShop.Controllers
             {
                 return Ok("Email đã tồn tại.");
             }
-            if (employeeRegister.PassWord == null || employeeRegister.PassWord.Length < 10)
+            if (employeeRegister.PassWord == null || employeeRegister.PassWord.Length < 6)
             {
                 return Ok("Mật khẩu không hợp lệ.");
             }
 
-            var Employee = employeeRegister.ToEmployee();
+            var employee = employeeRegister.ToEmployee();
 
-            _context.Employees.Add(Employee);
+            _context.Employees.Add(employee);
 
             await _context.SaveChangesAsync();
 
-            Employee.PassWord = null;
+            employee.PassWord = null;
 
-            return CreatedAtAction("GetUser", new { id = Employee.EmployeeId }, Employee);
+            return CreatedAtAction("GetEmployeeInfo", new { id = employee.EmployeeId }, employee);
 
         }
         [AllowAnonymous]
@@ -134,7 +151,7 @@ namespace BuildingMaterialShop.Controllers
 
             var employee = await _context.Employees
                                 .Where(u => u.Email == employeeLoginViewModel.Email
-                                && u.PassWord.ToLower() == employeeLoginViewModel.PassWord.ToLower())
+                                && u.PassWord == Auth.MD5.CreateMD5(employeeLoginViewModel.PassWord))
                                 .FirstOrDefaultAsync();
 
             EmployeeViewModel employeeViewModel = null;

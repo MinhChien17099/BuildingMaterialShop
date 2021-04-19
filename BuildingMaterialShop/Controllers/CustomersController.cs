@@ -56,21 +56,39 @@ namespace BuildingMaterialShop.Controllers
 
             return user;
         }
-
-        [HttpPut("ChangePassword")]
-        public async Task<IActionResult> ChangePassword(int customerId, string password, string newPassword)
+        [AllowAnonymous]
+        [HttpPost("ChangePassword")]
+        public async Task<IActionResult> ChangePassword(CustomerChangePasswordViewModel model)
         {
-            if (!CustomerExists(customerId))
+            if (!CustomerExists(model.CustomerId))
             {
                 return BadRequest();
             }
-            var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == customerId && c.PassWord == password);
+            var customer = _context.Customers.FirstOrDefault(e => e.CustomerId == model.CustomerId && e.PassWord == Auth.MD5.CreateMD5(model.OldPassword));
+
             if (customer == null)
             {
                 return Ok("Mật khẩu cũ không hợp lệ.");
             }
 
-            customer.PassWord = Auth.MD5.CreateMD5(newPassword);
+
+            if (string.IsNullOrEmpty(model.NewPassword) || model.NewPassword.Contains(' ') || model.NewPassword.Length < 6)
+            {
+                return Ok("Mật khẩu mới không hợp lệ.");
+            }
+
+            if (!model.NewPassword.Equals(model.ConfirmPassword))
+            {
+                return Ok("Mật khẩu mới không trùng khớp.");
+            }
+
+            if (!model.NewPassword.Equals(model.OldPassword))
+            {
+                return Ok("Mật khẩu mới không được giống với mật khẩu cũ.");
+            }
+
+            customer.PassWord = Auth.MD5.CreateMD5(model.NewPassword);
+
             _context.Entry(customer).State = EntityState.Modified;
 
             try
@@ -112,7 +130,7 @@ namespace BuildingMaterialShop.Controllers
 
             customer.PassWord = null;
 
-            return CreatedAtAction("GetUser", new { id = customer.CustomerId }, customer);
+            return CreatedAtAction("GetCustomerInfo", new { id = customer.CustomerId }, customer);
 
         }
         [AllowAnonymous]

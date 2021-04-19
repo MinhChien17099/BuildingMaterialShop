@@ -20,6 +20,7 @@ namespace BuildingMaterialShop.ApiModels.EmployeeViewModel
             this.FullName = employee.FullName;
             this.Gender = employee.Gender;
             this.PhoneNumber = employee.PhoneNumber;
+            this.RoleId = employee.RoleId;
         }
     }
 }
