@@ -92,7 +92,7 @@ namespace BuildingMaterialShop.Controllers
                 }
             }
 
-            return CreatedAtAction("GetProductDetails", new { id = product.ProductId }, product);
+            return CreatedAtAction("GetProductDetails", new { productId = product.ProductId }, product);
         }
 
         // PUT: Products/5
@@ -149,6 +149,10 @@ namespace BuildingMaterialShop.Controllers
         private bool CategoryExists(string categoryId)
         {
             return _context.Categories.Any(e => e.CategoryId == categoryId);
+        }
+        private bool SupplierExists(string supplierId)
+        {
+            return _context.Suppliers.Any(e => e.SupplierId == supplierId);
         }
     }
 }

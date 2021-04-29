@@ -9,7 +9,7 @@ using BuildingMaterialShop.Models;
 
 namespace BuildingMaterialShop.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class RolesController : ControllerBase
     {

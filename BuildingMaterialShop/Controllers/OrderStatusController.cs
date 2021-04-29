@@ -247,21 +247,6 @@ namespace BuildingMaterialShop.Controllers
         }
 
 
-        // DELETE: api/OrderStatus/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteOrderStatus(int id)
-        {
-            var orderStatus = await _context.OrderStatus.FindAsync(id);
-            if (orderStatus == null)
-            {
-                return NotFound();
-            }
-
-            _context.OrderStatus.Remove(orderStatus);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
 
         private bool OrderStatusExists(int id)
         {

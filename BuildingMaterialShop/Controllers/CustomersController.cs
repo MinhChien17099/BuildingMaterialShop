@@ -68,7 +68,7 @@ namespace BuildingMaterialShop.Controllers
 
             if (customer == null)
             {
-                return Ok("Mật khẩu cũ không hợp lệ.");
+                return Ok(new { error_message = "Mật khẩu cũ không hợp lệ." });
             }
 
 
@@ -82,7 +82,7 @@ namespace BuildingMaterialShop.Controllers
                 return Ok("Mật khẩu mới không trùng khớp.");
             }
 
-            if (!model.NewPassword.Equals(model.OldPassword))
+            if (model.NewPassword.Equals(model.OldPassword))
             {
                 return Ok("Mật khẩu mới không được giống với mật khẩu cũ.");
             }
@@ -164,6 +164,41 @@ namespace BuildingMaterialShop.Controllers
             customerViewModel.AccessToken = GenerateAccessToken(customer.CustomerId);
 
             return customerViewModel;
+        }
+        [AllowAnonymous]
+        [HttpPut("{customerId}")]
+        public async Task<IActionResult> PutCustomer(int customerId, [FromBody] Customer customer)
+        {
+
+            if (customerId != customer.CustomerId)
+            {
+                return BadRequest();
+            }
+            if (!CustomerExists(customerId))
+            {
+                return NotFound();
+            }
+            customer.PassWord = GetCustomerPassword(customer.CustomerId);
+
+            _context.Entry(customer).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!CustomerExists(customerId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
         [AllowAnonymous]
         [HttpPost("RefreshToken")]
@@ -271,6 +306,10 @@ namespace BuildingMaterialShop.Controllers
         private bool EmailEmployeeExists(string email)
         {
             return _context.Employees.Any(e => e.Email == email);
+        }
+        private string GetCustomerPassword(int id)
+        {
+            return _context.Customers.Find(id).PassWord;
         }
 
 

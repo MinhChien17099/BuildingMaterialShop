@@ -63,10 +63,22 @@ namespace BuildingMaterialShop.Controllers
 
             return employee;
         }
-        [AllowAnonymous]
+        [Authorize]
         [HttpPost("ChangePassword")]
         public async Task<IActionResult> ChangePassword(EmployeeChangePasswordViewModel model)
         {
+            var handler = new JwtSecurityTokenHandler();
+            string authHeader = Request.Headers["Authorization"];
+            authHeader = authHeader.Replace("Bearer ", "");
+            var jsonToken = handler.ReadToken(authHeader);
+            var tokenS = handler.ReadToken(authHeader) as JwtSecurityToken;
+            var id = tokenS.Claims.First(claim => claim.Type == " ").Value;
+
+            if (id != model.EmployeeId.ToString())
+            {
+                return Ok("Đổi con mẹ mày");
+            }
+
             if (!EmployeeExists(model.EmployeeId))
             {
                 return BadRequest();
@@ -75,7 +87,8 @@ namespace BuildingMaterialShop.Controllers
 
             if (employee == null)
             {
-                return Ok("Mật khẩu cũ không hợp lệ.");
+
+                return Ok("Mật khẩu không chính xác.");
             }
 
             if (string.IsNullOrEmpty(model.NewPassword) || model.NewPassword.Contains(' ') || model.NewPassword.Length < 6)
@@ -83,15 +96,15 @@ namespace BuildingMaterialShop.Controllers
                 return Ok("Mật khẩu mới không hợp lệ.");
             }
 
+
+            if (model.NewPassword.Equals(model.OldPassword))
+            {
+                return Ok("Mật khẩu mới không được giống với mật khẩu cũ.");
+            }
             if (!model.NewPassword.Equals(model.ConfirmPassword))
             {
                 return Ok("Mật khẩu mới không trùng khớp.");
             }
-            if (!model.NewPassword.Equals(model.OldPassword))
-            {
-                return Ok("Mật khẩu mới không được giống với mật khẩu cũ.");
-            }
-
 
             employee.PassWord = Auth.MD5.CreateMD5(model.NewPassword);
 
@@ -176,6 +189,41 @@ namespace BuildingMaterialShop.Controllers
             employeeViewModel.AccessToken = GenerateAccessToken(employee.EmployeeId);
 
             return employeeViewModel;
+        }
+        [AllowAnonymous]
+        [HttpPut("{employeeId}")]
+        public async Task<IActionResult> PutCustomer(int employeeId, [FromBody] Employee employee)
+        {
+
+            if (employeeId != employee.EmployeeId)
+            {
+                return BadRequest();
+            }
+            if (!EmployeeExists(employeeId))
+            {
+                return NotFound();
+            }
+            employee.PassWord = GetEmployeePassword(employee.EmployeeId);
+
+            _context.Entry(employee).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!EmployeeExists(employeeId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
         [AllowAnonymous]
         [HttpPost("RefreshToken")]
@@ -284,7 +332,10 @@ namespace BuildingMaterialShop.Controllers
         {
             return _context.Employees.Any(e => e.Email == email);
         }
-
+        private string GetEmployeePassword(int id)
+        {
+            return _context.Employees.Find(id).PassWord;
+        }
 
     }
 }

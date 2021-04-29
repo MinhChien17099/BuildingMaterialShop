@@ -33,6 +33,11 @@ namespace BuildingMaterialShop
 
             services.AddControllers();
 
+            services.AddMvc(options =>
+            {
+                options.SuppressAsyncSuffixInActionNames = false;
+            });
+
             services.AddCors(c =>
             {
                 c.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin());
