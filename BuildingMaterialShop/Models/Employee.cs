@@ -23,6 +23,7 @@ namespace BuildingMaterialShop.Models
         public bool? Gender { get; set; }
         public DateTime? BirthDay { get; set; }
         public string RoleId { get; set; }
+        public bool IsBlocked { get; set; }
 
         public virtual Role Role { get; set; }
         public virtual ICollection<Check> Checks { get; set; }

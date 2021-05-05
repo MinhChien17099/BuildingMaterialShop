@@ -117,7 +117,7 @@ namespace BuildingMaterialShop.Controllers
             {
                 return Ok("Email đã tồn tại.");
             }
-            if (customerRegister.PassWord == null || customerRegister.PassWord.Length < 10)
+            if (customerRegister.PassWord == null || customerRegister.PassWord.Length < 6)
             {
                 return Ok("Mật khẩu không hợp lệ.");
             }
@@ -130,7 +130,7 @@ namespace BuildingMaterialShop.Controllers
 
             customer.PassWord = null;
 
-            return CreatedAtAction("GetCustomerInfo", new { id = customer.CustomerId }, customer);
+            return CreatedAtAction("GetCustomerInfo", new { customerId = customer.CustomerId }, customer);
 
         }
         [AllowAnonymous]
@@ -143,7 +143,10 @@ namespace BuildingMaterialShop.Controllers
                                 .FirstOrDefaultAsync();
 
             CustomerViewModel customerViewModel = null;
-
+            if (customer.IsBlocked)
+            {
+                return Ok("Tài khoản đang tạm khóa.");
+            }
             if (customer != null)
             {
                 RefreshTokenCustomer refreshToken = GenerateRefreshToken();
@@ -166,7 +169,7 @@ namespace BuildingMaterialShop.Controllers
             return customerViewModel;
         }
         [AllowAnonymous]
-        [HttpPut("{customerId}")]
+        [HttpPost("ChangeInfo/{customerId}")]
         public async Task<IActionResult> PutCustomer(int customerId, [FromBody] Customer customer)
         {
 
@@ -178,9 +181,15 @@ namespace BuildingMaterialShop.Controllers
             {
                 return NotFound();
             }
-            customer.PassWord = GetCustomerPassword(customer.CustomerId);
 
-            _context.Entry(customer).State = EntityState.Modified;
+            var _customer = await _context.Customers.FindAsync(customerId);
+            _customer.Address = customer.Address;
+            _customer.BirthDay = customer.BirthDay;
+            _customer.FullName = customer.FullName;
+            _customer.Gender = customer.Gender;
+            _customer.PhoneNumber = customer.PhoneNumber;
+
+
 
             try
             {
@@ -199,6 +208,66 @@ namespace BuildingMaterialShop.Controllers
             }
 
             return NoContent();
+        }
+        [AllowAnonymous]
+        [HttpPost("Block")]
+        public ActionResult Block([FromBody] int customerId)
+        {
+            if (!CustomerExists(customerId))
+                return NotFound();
+
+            var customer = _context.Customers.Find(customerId);
+            if (!customer.IsBlocked)
+            {
+                customer.IsBlocked = true;
+            }
+            else
+            {
+                return Ok("Khách hàng đã bị khóa rồi.");
+            }
+            try
+            {
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return Ok("Khóa khách hàng không thành công.");
+
+            }
+
+            return Ok("Khóa khách hàng thành công.");
+
+        }
+        [AllowAnonymous]
+        [HttpPost("UnBlock")]
+        public async Task<ActionResult> UnBlock([FromBody] int customerId)
+        {
+            if (!CustomerExists(customerId))
+                return NotFound();
+
+            var customer = _context.Customers.Find(customerId);
+
+            if (customer.IsBlocked)
+            {
+                customer.IsBlocked = false;
+            }
+            else
+            {
+                return Ok("Khách hàng chưa bị khóa");
+            }
+
+            try
+            {
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return Ok("Mở khóa khách hàng không thành công.");
+
+            }
+
+            return Ok("Mở khóa khách hàng thành công.");
+
         }
         [AllowAnonymous]
         [HttpPost("RefreshToken")]

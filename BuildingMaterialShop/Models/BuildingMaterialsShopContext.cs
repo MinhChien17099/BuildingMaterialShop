@@ -10,13 +10,11 @@ namespace BuildingMaterialShop.Models
     {
         public BuildingMaterialsShopContext()
         {
-
         }
 
         public BuildingMaterialsShopContext(DbContextOptions<BuildingMaterialsShopContext> options)
             : base(options)
         {
-
         }
 
         public virtual DbSet<Category> Categories { get; set; }
@@ -99,6 +97,8 @@ namespace BuildingMaterialShop.Models
 
                 entity.Property(e => e.FullName).HasMaxLength(100);
 
+                entity.Property(e => e.IsBlocked).HasColumnName("isBlocked");
+
                 entity.Property(e => e.PassWord).HasMaxLength(200);
 
                 entity.Property(e => e.PhoneNumber).HasMaxLength(20);
@@ -113,6 +113,8 @@ namespace BuildingMaterialShop.Models
                 entity.Property(e => e.Email).HasMaxLength(50);
 
                 entity.Property(e => e.FullName).HasMaxLength(100);
+
+                entity.Property(e => e.IsBlocked).HasColumnName("isBlocked");
 
                 entity.Property(e => e.PassWord).HasMaxLength(200);
 

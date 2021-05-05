@@ -76,7 +76,7 @@ namespace BuildingMaterialShop.Controllers
 
             if (id != model.EmployeeId.ToString())
             {
-                return Ok("Đổi con mẹ mày");
+                return Unauthorized();
             }
 
             if (!EmployeeExists(model.EmployeeId))
@@ -127,6 +127,7 @@ namespace BuildingMaterialShop.Controllers
         [HttpPost("Register")]
         public async Task<ActionResult<EmployeeViewModel>> Register([FromBody] EmployeeRegisterViewModel employeeRegister)
         {
+
             if (employeeRegister.Email == null || employeeRegister.Email.Length < 10)
             {
                 return Ok("Email không hợp lệ.");
@@ -140,23 +141,37 @@ namespace BuildingMaterialShop.Controllers
             {
                 return Ok("Mật khẩu không hợp lệ.");
             }
+            var role = _context.Roles.Find(employeeRegister.RoleId);
+            if (role == null)
+            {
+                return Ok("Chức vụ không hợp lệ.");
+            }
+
 
             var employee = employeeRegister.ToEmployee();
 
             _context.Employees.Add(employee);
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+
+            }
+            catch (Exception e)
+            {
+
+                return Ok("Thêm nhân viên thất bại.");
+            }
 
             employee.PassWord = null;
-
-            return CreatedAtAction("GetEmployeeInfo", new { id = employee.EmployeeId }, employee);
+            return CreatedAtAction("GetEmployeeInfo", new { employeeId = employee.EmployeeId }, employee);
 
         }
         [AllowAnonymous]
         [HttpPost("Login")]
         public async Task<ActionResult<EmployeeViewModel>> Login([FromBody] EmployeeLoginViewModel employeeLoginViewModel)
         {
-            if (employeeLoginViewModel.Email == null || employeeLoginViewModel.PassWord == null)
+            if (string.IsNullOrEmpty(employeeLoginViewModel.Email) || string.IsNullOrEmpty(employeeLoginViewModel.PassWord))
             {
                 return Ok("Email hoặc mật khẩu không chính xác.");
             }
@@ -166,7 +181,10 @@ namespace BuildingMaterialShop.Controllers
                                 .Where(u => u.Email == employeeLoginViewModel.Email
                                 && u.PassWord == Auth.MD5.CreateMD5(employeeLoginViewModel.PassWord))
                                 .FirstOrDefaultAsync();
-
+            if (employee.IsBlocked)
+            {
+                return Ok("Tài khoản đang tạm khóa.");
+            }
             EmployeeViewModel employeeViewModel = null;
 
             if (employee != null)
@@ -191,7 +209,67 @@ namespace BuildingMaterialShop.Controllers
             return employeeViewModel;
         }
         [AllowAnonymous]
-        [HttpPut("{employeeId}")]
+        [HttpPost("Block")]
+        public ActionResult Block([FromBody] int employeeId)
+        {
+            if (!EmployeeExists(employeeId))
+                return NotFound();
+
+            var employee = _context.Employees.Find(employeeId);
+            if (!employee.IsBlocked)
+            {
+                employee.IsBlocked = true;
+            }
+            else
+            {
+                return Ok("Nhân viên đã bị khóa rồi.");
+            }
+            try
+            {
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return Ok("Khóa nhân viên không thành công.");
+
+            }
+
+            return Ok("Khóa nhân viên thành công.");
+
+        }
+        [AllowAnonymous]
+        [HttpPost("UnBlock")]
+        public async Task<ActionResult> UnBlock([FromBody] int employeeId)
+        {
+            if (!EmployeeExists(employeeId))
+                return NotFound();
+
+            var employee = _context.Employees.Find(employeeId);
+
+            if (employee.IsBlocked)
+            {
+                employee.IsBlocked = false;
+            }
+            else
+            {
+                return Ok("Nhân viên chưa bị khóa");
+            }
+
+            try
+            {
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return Ok("Mở khóa nhân viên không thành công.");
+
+            }
+
+            return Ok("Mở khóa nhân viên thành công.");
+
+        }
+        [AllowAnonymous]
+        [HttpPost("ChangeInfo/{employeeId}")]
         public async Task<IActionResult> PutCustomer(int employeeId, [FromBody] Employee employee)
         {
 
@@ -203,9 +281,12 @@ namespace BuildingMaterialShop.Controllers
             {
                 return NotFound();
             }
-            employee.PassWord = GetEmployeePassword(employee.EmployeeId);
-
-            _context.Entry(employee).State = EntityState.Modified;
+            var _employee = await _context.Employees.FindAsync(employeeId);
+            _employee.Address = employee.Address;
+            _employee.BirthDay = employee.BirthDay;
+            _employee.FullName = employee.FullName;
+            _employee.Gender = employee.Gender;
+            _employee.PhoneNumber = employee.PhoneNumber;
 
             try
             {

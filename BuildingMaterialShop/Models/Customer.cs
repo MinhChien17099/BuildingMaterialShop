@@ -21,6 +21,7 @@ namespace BuildingMaterialShop.Models
         public string PassWord { get; set; }
         public bool? Gender { get; set; }
         public DateTime? BirthDay { get; set; }
+        public bool IsBlocked { get; set; }
 
         public virtual ICollection<Order> Orders { get; set; }
         public virtual ICollection<RefreshTokenCustomer> RefreshTokenCustomers { get; set; }

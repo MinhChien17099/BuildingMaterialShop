@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using BuildingMaterialShop.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using BuildingMaterialShop.ApiModels.ProductViewModel;
 
 namespace BuildingMaterialShop.Controllers
 {
@@ -55,17 +56,26 @@ namespace BuildingMaterialShop.Controllers
         // POST: Products
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Product>> PostProduct(Product product)
+        public async Task<ActionResult<Product>> PostProduct(InsertProductViewModel model)
         {
-            if (String.IsNullOrEmpty(product.ProductId))
+            if (String.IsNullOrEmpty(model.productId))
             {
                 return Ok("Mã sản phẩm không được để trống.");
             }
 
-            if (!CategoryExists(product.CategoryId))
+            if (!CategoryExists(model.categoryId))
             {
                 return NotFound();
             }
+            foreach (var item in model.supplies)
+            {
+                if (!SupplierExists(item))
+                    return NotFound();
+
+            }
+
+
+            var product = model.ToProduct();
 
             WareHouse ware = new WareHouse();
             ware.Date = DateTime.Now;

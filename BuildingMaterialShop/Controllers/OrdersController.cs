@@ -27,7 +27,8 @@ namespace BuildingMaterialShop.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
-            return await _context.Orders.ToListAsync();
+            return await _context.Orders.Include(order => order.OrderStatus)
+                                                .ToListAsync();
         }
         // GET: Orders/customerId
         [HttpGet("{orderId}")]
