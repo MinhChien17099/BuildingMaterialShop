@@ -1,4 +1,5 @@
 ﻿using BuildingMaterialShop.Models;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,7 @@ namespace BuildingMaterialShop.ApiModels.ProductViewModel
         public bool status { get; set; }
         public string categoryId { get; set; }
         public string[] supplies { get; set; }
+        public IFormFile Image { get; set; }
 
         public Product ToProduct()
         {
