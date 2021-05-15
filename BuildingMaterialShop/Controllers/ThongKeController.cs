@@ -14,7 +14,6 @@ namespace BuildingMaterialShop.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [EnableCors("AllowOrigin")]
 
     public class ThongKeController : ControllerBase
     {

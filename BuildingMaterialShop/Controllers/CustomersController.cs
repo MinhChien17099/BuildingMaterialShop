@@ -21,7 +21,6 @@ namespace BuildingMaterialShop.Controllers
     [Route("[controller]")]
     [Authorize]
     [ApiController]
-    [EnableCors("AllowOrigin")]
 
     public class CustomersController : ControllerBase
     {
@@ -143,6 +142,10 @@ namespace BuildingMaterialShop.Controllers
                                 .FirstOrDefaultAsync();
 
             CustomerViewModel customerViewModel = null;
+            if (customer == null)
+            {
+                return Ok("Email hoặc mật khẩu không chính xác.");
+            }
             if (customer.IsBlocked)
             {
                 return Ok("Tài khoản đang tạm khóa.");
@@ -158,10 +161,7 @@ namespace BuildingMaterialShop.Controllers
             }
 
 
-            if (customerViewModel == null)
-            {
-                return Ok("Email hoặc mật khẩu không chính xác.");
-            }
+            
 
             //sign token here
             customerViewModel.AccessToken = GenerateAccessToken(customer.CustomerId);

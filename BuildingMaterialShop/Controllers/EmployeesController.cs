@@ -21,7 +21,6 @@ namespace BuildingMaterialShop.Controllers
     [Route("[controller]")]
     [Authorize]
     [ApiController]
-    [EnableCors("AllowOrigin")]
 
     public class EmployeesController : ControllerBase
     {
@@ -63,21 +62,21 @@ namespace BuildingMaterialShop.Controllers
 
             return employee;
         }
-        [Authorize]
+        [AllowAnonymous]
         [HttpPost("ChangePassword")]
         public async Task<IActionResult> ChangePassword(EmployeeChangePasswordViewModel model)
         {
-            var handler = new JwtSecurityTokenHandler();
-            string authHeader = Request.Headers["Authorization"];
-            authHeader = authHeader.Replace("Bearer ", "");
-            var jsonToken = handler.ReadToken(authHeader);
-            var tokenS = handler.ReadToken(authHeader) as JwtSecurityToken;
-            var id = tokenS.Claims.First(claim => claim.Type == " ").Value;
+            //var handler = new JwtSecurityTokenHandler();
+            //string authHeader = Request.Headers["Authorization"];
+            //authHeader = authHeader.Replace("Bearer ", "");
+            //var jsonToken = handler.ReadToken(authHeader);
+            //var tokenS = handler.ReadToken(authHeader) as JwtSecurityToken;
+            //var id = tokenS.Claims.First(claim => claim.Type == " ").Value;
 
-            if (id != model.EmployeeId.ToString())
-            {
-                return Unauthorized();
-            }
+            //if (id != model.EmployeeId.ToString())
+            //{
+            //    return Unauthorized();
+            //}
 
             if (!EmployeeExists(model.EmployeeId))
             {
@@ -181,6 +180,10 @@ namespace BuildingMaterialShop.Controllers
                                 .Where(u => u.Email == employeeLoginViewModel.Email
                                 && u.PassWord == Auth.MD5.CreateMD5(employeeLoginViewModel.PassWord))
                                 .FirstOrDefaultAsync();
+            if (employee == null)
+            {
+                return Ok("Email hoặc mật khẩu không chính xác.");
+            }
             if (employee.IsBlocked)
             {
                 return Ok("Tài khoản đang tạm khóa.");
@@ -198,10 +201,7 @@ namespace BuildingMaterialShop.Controllers
             }
 
 
-            if (employeeViewModel == null)
-            {
-                return Ok("Email hoặc mật khẩu không chính xác.");
-            }
+            
 
             //sign token here
             employeeViewModel.AccessToken = GenerateAccessToken(employee.EmployeeId);

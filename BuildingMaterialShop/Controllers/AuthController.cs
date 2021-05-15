@@ -16,9 +16,8 @@ using System.Threading.Tasks;
 
 namespace BuildingMaterialShop.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
-    [EnableCors("AllowOrigin")]
 
     class AuthController : ControllerBase
     {

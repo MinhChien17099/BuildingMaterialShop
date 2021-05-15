@@ -13,7 +13,6 @@ namespace BuildingMaterialShop.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [EnableCors("AllowOrigin")]
     [AllowAnonymous]
     public class OrdersController : ControllerBase
     {

@@ -12,8 +12,7 @@ namespace BuildingMaterialShop.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [EnableCors("AllowOrigin")]
-
+    
     public class CategoriesController : ControllerBase
     {
         private readonly BuildingMaterialsShopContext _context;

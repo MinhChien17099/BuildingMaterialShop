@@ -31,17 +31,19 @@ namespace BuildingMaterialShop
         public void ConfigureServices(IServiceCollection services)
         {
 
+            services.AddCors(options => options.AddDefaultPolicy(builder =>builder.WithOrigins("http://localhost:4200")
+                                                                                   .AllowAnyHeader()
+                                                                                   .AllowAnyMethod()));
+
             services.AddControllers();
+
+
 
             services.AddMvc(options =>
             {
                 options.SuppressAsyncSuffixInActionNames = false;
             });
 
-            services.AddCors(c =>
-            {
-                c.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin());
-            });
 
             services.AddMvc(option => option.EnableEndpointRouting = false)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
@@ -119,16 +121,14 @@ namespace BuildingMaterialShop
 
             app.UseRouting();
 
-            app.UseCors(x => x
-              .AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader());
 
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.UseCors();
+            
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BuildingMaterialShop v1"));
 
