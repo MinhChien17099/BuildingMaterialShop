@@ -16,6 +16,8 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using System.Threading;
 using Google.Apis.Util.Store;
+using System.Text.RegularExpressions;
+using System.Drawing;
 
 namespace BuildingMaterialShop.Controllers
 {
@@ -67,7 +69,7 @@ namespace BuildingMaterialShop.Controllers
         // POST: Products
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Product>> PostProduct([FromForm] InsertProductViewModel model)
+        public async Task<ActionResult<Product>> PostProduct([FromBody] InsertProductViewModel model)
         {
             if (String.IsNullOrEmpty(model.productId))
             {
@@ -84,36 +86,36 @@ namespace BuildingMaterialShop.Controllers
                     return NotFound();
 
             }
-            if (model.Image == null)
+            if (string.IsNullOrEmpty(model.images))
             {
                 return Ok("Vui lòng chọn hình ảnh đính kèm.");
             }
-            if (model.Image.ContentType != "image/jpeg" && model.Image.ContentType != "image/png")
-            {
-                return Ok("Chỉ chấp nhận định dạng jpeg hoặc png.");
-            }
-            if (model.Image.Length > 1048576)
+
+            if (model.images.Length > 1048576)
             {
                 return Ok("Kích thước không vượt quá 1mb");
             }
 
             string path = _webhostEnvieronment.WebRootPath + "\\uploads\\";
 
+            string filename = model.productId+".png";
+
             try
             {
-                if (model.Image.Length > 0)
-                {
+                Base64ToImage(model.images, path + filename);
+                //if (model.images.Length > 0)
+                //{
 
-                    if (!Directory.Exists(path))
-                    {
-                        Directory.CreateDirectory(path);
-                    }
-                    using (FileStream file = System.IO.File.Create(path + model.Image.FileName))
-                    {
-                        model.Image.CopyTo(file);
-                        file.Flush();
-                    }
-                }
+                //    if (!Directory.Exists(path))
+                //    {
+                //        Directory.CreateDirectory(path);
+                //    }
+                //    using (FileStream file = System.IO.File.Create(path + model.images.FileName))
+                //    {
+                //        model.Image.CopyTo(file);
+                //        file.Flush();
+                //    }
+                //}
             }
             catch (Exception e)
             {
@@ -135,7 +137,7 @@ namespace BuildingMaterialShop.Controllers
             //Id của folder muốn upload
             string folderid = "1iCNelsHCSLGKQL9XRJwMu9nUHZURFgR8";
 
-            var filePath = path + model.Image.FileName;
+            var filePath = path+ filename; 
 
             string fileId = "1paIUZyOqIW5ZllHXE0b6r-kZWJHQMQYR";
             try
@@ -225,7 +227,7 @@ namespace BuildingMaterialShop.Controllers
 
             return NoContent();
         }
-       
+
         private string UploadImage(string path, DriveService service, string folderUpload)
         {
             var fileMetadata = new Google.Apis.Drive.v3.Data.File();
@@ -283,6 +285,20 @@ namespace BuildingMaterialShop.Controllers
         private bool SupplierExists(string supplierId)
         {
             return _context.Suppliers.Any(e => e.SupplierId == supplierId);
+        }
+        void Base64ToImage(string base64string, string filename)
+        {
+            base64string = @"data:image/png;base64," + base64string;
+            var base64Data = Regex.Match(base64string, @"data:image/(?<type>.+?),(?<data>.+)").Groups["data"].Value;
+            var binData = Convert.FromBase64String(base64Data);
+
+            using (var stream = new MemoryStream(binData))
+            {
+                Bitmap bitmap = new Bitmap(stream);
+                bitmap.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
+
+
+            }
         }
     }
 }

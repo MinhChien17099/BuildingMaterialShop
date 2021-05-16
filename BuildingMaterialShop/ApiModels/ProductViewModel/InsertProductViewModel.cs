@@ -18,7 +18,7 @@ namespace BuildingMaterialShop.ApiModels.ProductViewModel
         public bool status { get; set; }
         public string categoryId { get; set; }
         public string[] supplies { get; set; }
-        public IFormFile Image { get; set; }
+       
 
         public Product ToProduct()
         {

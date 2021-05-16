@@ -31,7 +31,7 @@ namespace BuildingMaterialShop
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddCors(options => options.AddDefaultPolicy(builder =>builder.WithOrigins("http://localhost:4200")
+            services.AddCors(options => options.AddDefaultPolicy(builder =>builder.AllowAnyOrigin()
                                                                                    .AllowAnyHeader()
                                                                                    .AllowAnyMethod()));
 
