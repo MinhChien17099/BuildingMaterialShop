@@ -31,7 +31,7 @@ namespace BuildingMaterialShop
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddCors(options => options.AddDefaultPolicy(builder =>builder.AllowAnyOrigin()
+            services.AddCors(options => options.AddPolicy("MyPolicy",builder =>builder.AllowAnyOrigin()
                                                                                    .AllowAnyHeader()
                                                                                    .AllowAnyMethod()));
 
@@ -127,7 +127,7 @@ namespace BuildingMaterialShop
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseCors();
+            app.UseCors("MyPolicy");
             
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BuildingMaterialShop v1"));
